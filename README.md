@@ -105,11 +105,52 @@ fn returns_summarizable() -> impl Summary {
         ),
     }
 }
-//we specify that the returns_summarizable function returns some type that implements the Summary trait without naming the concrete type
+//returns_summarizable function returns some type that implements the Summary trait without naming the concrete type.
 ```
 However, you can only use impl Trait if you’re **returning a single type**.<br>
 Returning either a NewsArticle or a Tweet isn’t allowed due to restrictions around how the impl Trait syntax is implemented in the compiler.<br>
 See : [Using Trait Objects That Allow for Values of Different Types](https://doc.rust-lang.org/book/ch17-02-trait-objects.html#using-trait-objects-that-allow-for-values-of-different-types)
+
+### Using Trait Bounds to Conditionally Implement Methods
+By using a trait bound with an impl block that uses generic type parameters, we can implement methods conditionally for types that implement the specified traits.
+
+```rust
+//in the next impl block, Pair<T> only implements the cmp_display method if its inner type T
+//1 implements the PartialOrd trait that enables comparison
+//2 and the Display trait that enables printing.
+struct Pair<T> {
+    x: T,
+    y: T,
+}
+
+impl<T> Pair<T> {
+    fn new(x: T, y: T) -> Self {
+        Self { x, y }
+    }
+}
+
+impl<T: std::fmt::Display + PartialOrd> Pair<T> {
+    fn cmp_display(&self) {
+        if self.x >= self.y {
+            println!("The largest member is x = {}", self.x);
+        } else {
+            println!("The largest member is y = {}", self.y);
+        }
+    }
+}
+```
+We can also conditionally implement a trait for any type that implements another trait. 
+```rust,ignore
+impl<T: Display> ToString for T {
+    // --snip--
+}
+//Because the standard library has this blanket implementation, we can call the to_string method
+//defined by the ToString trait on any type that implements the Display trait.
+
+//For example, we can turn integers into their corresponding String values like this because integers implement Display
+let s = 3.to_string();
+```
+Blanket implementations appear in the documentation for the trait in the “Implementors” section.
 
 
 
@@ -122,9 +163,14 @@ See : [Using Trait Objects That Allow for Values of Different Types](https://doc
 
 ---
 ### References 
-- [Advanced Traits (Book)](https://doc.rust-lang.org/book/ch19-03-advanced-traits.html)
-- [Catalog of more Rust design patterns](https://rust-unofficial.github.io/patterns/intro.html)
+Book
+- [Advanced Traits](https://doc.rust-lang.org/book/ch19-03-advanced-traits.html)
+- [Trait objects](https://doc.rust-lang.org/book/ch17-02-trait-objects.html#using-trait-objects-that-allow-for-values-of-different-types)
+- [Functional features](https://doc.rust-lang.org/book/ch13-00-functional-features.html)
 - ['Deref' Trait](https://doc.rust-lang.org/book/ch15-02-deref.html#treating-smart-pointers-like-regular-references-with-the-deref-trait)
+- 
+- [Catalog of more Rust design patterns](https://rust-unofficial.github.io/patterns/intro.html)
+  
   <br>
 ##### Other
 - [Typestate Pattern in Rust](https://cliffle.com/blog/rust-typestate/)
