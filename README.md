@@ -232,8 +232,138 @@ where
 //Fut must implement the Future trait, and the associated types Output and Future are derived from this future type.
 ```
 
+### Default Generic Type Parameters and Operator Overloading
+When we use generic type parameters, we can specify a default concrete type for the generic type.<br>
+This eliminates the need for implementors of the trait to specify a concrete type.<br>
+You specify a default type when declaring a generic type with the $${\color{orange}<PlaceholderType=ConcreteType>}$$ syntax.<br>
 
-### HRTB - Higher rank trait bounds - (Rustonomicon)[https://doc.rust-lang.org/nomicon/hrtb.html]
+You can overload the operations and corresponding traits listed in std::ops by implementing the traits associated with the operator.
+```rust
+#[derive(Debug, Copy, Clone, PartialEq)]
+struct Point {
+    x: i32,
+    y: i32,
+}
+
+impl std::ops::Add for Point {
+    type Output = Point;
+
+    fn add(self, other: Point) -> Point {
+        Point {
+            x: self.x + other.x,
+            y: self.y + other.y,
+        }
+    }
+}
+
+fn main() {
+    assert_eq!(
+        Point { x: 1, y: 0 } + Point { x: 2, y: 3 },
+        Point { x: 3, y: 3 }
+    );
+}
+//The default generic type in this code is within the Add trait. Here is its definition:
+
+trait Add<Rhs=Self> { //Rhs=Self: this syntax is called default type parameters
+    type Output;
+
+    fn add(self, rhs: Rhs) -> Self::Output;
+}
+```
+If we don’t specify a concrete type for Rhs when we implement the Add trait, the type of Rhs will default to Self, which will be the type we’re implementing Add on.
+<br/>
+When we implemented Add for Point, we used the default for Rhs because we wanted to add two Point instances.<br>
+Let’s look at an example of implementing the Add trait where we want to customize the Rhs type rather than using the default.
+```rust
+//Implementing the Add trait on Millimeters to add Millimeters to Meters
+struct Millimeters(u32); //newtype pattern
+struct Meters(u32);
+
+impl std::ops::Add<Meters> for Millimeters {
+    type Output = Millimeters;
+
+    fn add(self, other: Meters) -> Millimeters {
+        Millimeters(self.0 + (other.0 * 1000))
+    }
+}
+//To add Millimeters and Meters, we specify impl Add<Meters> to set the value of the Rhs type parameter instead of using the default of Self.
+```
+You’ll use default type parameters in two main ways:
+- To extend a type without breaking existing code
+- To allow customization in specific cases most users won’t need
+<br/>
+
+A trait with an associated function and a type with an associated function of the same name that also implements the trait
+```rust
+trait Animal {
+    fn baby_name() -> String;
+}
+
+struct Dog;
+
+impl Dog {
+    fn baby_name() -> String {
+        String::from("Spot")
+    }
+}
+
+impl Animal for Dog {
+    fn baby_name() -> String {
+        String::from("puppy")
+    }
+}
+
+fn main() {
+    println!("A baby dog is called a {}", Dog::baby_name());
+    //prints: A baby dog is called a Spot
+}
+```
+
+Attempting to call the baby_name function from the Animal trait, but Rust doesn’t know which implementation to use:
+```rust
+fn main() {
+    println!("A baby dog is called a {}", Animal::baby_name());
+    //error[E0790]: cannot call associated function on trait without specifying the corresponding `impl` type.
+}
+```
+To disambiguate and tell Rust that we want to use the implementation of Animal for Dog as opposed to the implementation of Animal for some other type, we need to use fully qualified syntax. 
+```rust,ignore
+fn main() {
+    println!("A baby dog is called a {}", <Dog as Animal>::baby_name()); //treat the Dog type as an Animal for this function call 
+}
+//Using fully qualified syntax to specify that we want to call the baby_name function from the Animal trait as implemented on Dog
+
+//In general, fully qualified syntax is defined as follows:
+<Type as Trait>::function(receiver_if_method, next_arg, ...);
+```
+
+#### [Using newType pattern to implement External Traits on External Types](https://doc.rust-lang.org/book/ch19-03-advanced-traits.html#using-the-newtype-pattern-to-implement-external-traits-on-external-types)
+```rust
+//Creating a Wrapper type around Vec<String> to implement Display
+
+use std::fmt;
+
+struct Wrapper(Vec<String>);
+
+impl fmt::Display for Wrapper {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "[{}]", self.0.join(", "))
+    }
+}
+
+fn main() {
+    let w = Wrapper(vec![String::from("hello"), String::from("world")]);
+    println!("w = {w}");
+}
+```
+- The downside of using this technique is that Wrapper is a new type, so it doesn’t have the methods of the value it’s holding.
+- If we wanted the new type to have every method the inner type has, implementing the [Deref trait](https://doc.rust-lang.org/book/ch15-02-deref.html#treating-smart-pointers-like-regular-references-with-the-deref-trait) on the Wrapper to return the inner type would be a solution.
+- If we don’t want the Wrapper type to have all the methods of the inner type—for example, to restrict the Wrapper type’s behavior—we would have to implement just the methods we do want manually.
+
+
+
+### HRTB - Higher rank trait bounds - [Rustonomicon](https://doc.rust-lang.org/nomicon/hrtb.html)
+
 
 ---
 ### References 
