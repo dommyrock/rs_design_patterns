@@ -153,6 +153,30 @@ let s = 3.to_string();
 Blanket implementations appear in the documentation for the trait in the “Implementors” section.
 
 
+### Fn Traits | [Book](https://doc.rust-lang.org/book/ch13-01-closures.html#moving-captured-values-out-of-closures-and-the-fn-traits)
+```rust
+//FnOnce - All closures implement at least this trait
+//A closure that moves captured values out of its body will only implement FnOnce and none of the other Fn traits,
+//because it can only be called once.
+impl<T> Option<T> {
+    pub fn unwrap_or_else<F>(self, f: F) -> T
+    where
+        F: FnOnce() -> T
+    {
+        match self {
+            Some(x) => x,
+            None => f(),
+        }
+    }
+}
+//The trait bound specified on the generic type F is FnOnce() -> T,
+//which means F must be able to be called once, take no arguments, and return a T.
+```
+Using FnOnce in the trait bound expresses the constraint that unwrap_or_else is only going to call f at most one time.
+Because all closures implement FnOnce, unwrap_or_else accepts all three kinds of closures and is as flexible as it can be.
+
+### Trait objects
+
 
 ---
 # TODO:
@@ -163,14 +187,19 @@ Blanket implementations appear in the documentation for the trait in the “Impl
 
 ---
 ### References 
-Book
+##### Book
 - [Advanced Traits](https://doc.rust-lang.org/book/ch19-03-advanced-traits.html)
 - [Trait objects](https://doc.rust-lang.org/book/ch17-02-trait-objects.html#using-trait-objects-that-allow-for-values-of-different-types)
 - [Functional features](https://doc.rust-lang.org/book/ch13-00-functional-features.html)
 - ['Deref' Trait](https://doc.rust-lang.org/book/ch15-02-deref.html#treating-smart-pointers-like-regular-references-with-the-deref-trait)
 - 
 - [Catalog of more Rust design patterns](https://rust-unofficial.github.io/patterns/intro.html)
-  
+
+##### Videos: 
+- [Dyn vs Static Dispatch - Ryan Levick](https://www.youtube.com/watch?v=tM2r9HD4ivQ)
+- [Dispatch & Fat pointers - Jon Gjengset](https://www.youtube.com/watch?v=xcygqF5LVmM)
+- [Zero cost abstractions intro - Oliver Jumpertz](https://www.youtube.com/watch?v=MRXi19zQgSo)
+- 
   <br>
 ##### Other
 - [Typestate Pattern in Rust](https://cliffle.com/blog/rust-typestate/)
