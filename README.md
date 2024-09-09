@@ -1,4 +1,4 @@
-# Rust Design patterns 
+# Rust - Trait Design patterns 
 
 This document focuses on the common design patterns around **Traits**, **Static** and **Dynamic** dispatch.
 
