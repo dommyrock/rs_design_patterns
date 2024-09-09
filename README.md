@@ -172,11 +172,13 @@ impl<T> Option<T> {
 //The trait bound specified on the generic type F is FnOnce() -> T,
 //which means F must be able to be called once, take no arguments, and return a T.
 ```
-Using FnOnce in the trait bound expresses the constraint that unwrap_or_else is only going to call f at most one time.
-Because all closures implement FnOnce, unwrap_or_else accepts all three kinds of closures and is as flexible as it can be.
+Using $${\color{orange}FnOnce}$$ in the trait bound expresses the constraint that unwrap_or_else is only going to call f at most one time.
+Because all closures implement $${\color{orange}FnOnce}$$, unwrap_or_else accepts all three kinds of closures and is as flexible as it can be.
 
 ### Trait objects - Dynamic & Static dispatch | [Book](https://doc.rust-lang.org/book/ch17-02-trait-objects.html#using-trait-objects-that-allow-for-values-of-different-types)
-Monomorphization process performed by the compiler when we use trait bounds on generics:<br>
+<br/>
+
+$${\color{orange}Monomorphization}$$ process performed by the compiler when we use trait bounds on generics:<br>
 the compiler generates nongeneric implementations of functions and methods for each concrete type that we use in place of a generic type parameter.<br>
 The code that results from monomorphization is doing **static dispatch**, which is when the compiler knows what method you’re calling at compile time.<br>
 This is opposed to **dynamic dispatch**, which is when the compiler can’t tell at compile time which method you’re calling.<br>
@@ -194,17 +196,20 @@ When we use trait objects, Rust must use dynamic dispatch.
 - [Trait objects](https://doc.rust-lang.org/book/ch17-02-trait-objects.html#using-trait-objects-that-allow-for-values-of-different-types)
 - [Functional features](https://doc.rust-lang.org/book/ch13-00-functional-features.html)
 - ['Deref' Trait](https://doc.rust-lang.org/book/ch15-02-deref.html#treating-smart-pointers-like-regular-references-with-the-deref-trait)
-- 
+
+##### Posts
+- [Polymorphism in rust - Matt Oswalt](https://oswalt.dev/2021/06/polymorphism-in-rust/)
 - [Catalog of more Rust design patterns](https://rust-unofficial.github.io/patterns/intro.html)
+- [Typestate Pattern in Rust](https://cliffle.com/blog/rust-typestate/)
+- [Extension Traits in Rust](http://xion.io/post/code/rust-extension-traits.html)
 
 ##### Videos: 
 - [Dyn vs Static Dispatch - Ryan Levick](https://www.youtube.com/watch?v=tM2r9HD4ivQ)
 - [Dispatch & Fat pointers - Jon Gjengset](https://www.youtube.com/watch?v=xcygqF5LVmM)
 - [Zero cost abstractions intro - Oliver Jumpertz](https://www.youtube.com/watch?v=MRXi19zQgSo)
 - 
-  <br>
-##### Other
-- [Typestate Pattern in Rust](https://cliffle.com/blog/rust-typestate/)
-- [Extension Traits in Rust](http://xion.io/post/code/rust-extension-traits.html)
 
-$${\color{orange}By| Dominik Polzer}$$
+
+---
+
+$${\color{orange}By| Dominik&#8202;Polzer}$$
