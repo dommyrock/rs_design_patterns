@@ -175,14 +175,16 @@ impl<T> Option<T> {
 Using FnOnce in the trait bound expresses the constraint that unwrap_or_else is only going to call f at most one time.
 Because all closures implement FnOnce, unwrap_or_else accepts all three kinds of closures and is as flexible as it can be.
 
-### Trait objects
+### Trait objects - Dynamic & Static dispatch | [Book](https://doc.rust-lang.org/book/ch17-02-trait-objects.html#using-trait-objects-that-allow-for-values-of-different-types)
+Monomorphization process performed by the compiler when we use trait bounds on generics:<br>
+the compiler generates nongeneric implementations of functions and methods for each concrete type that we use in place of a generic type parameter.<br>
+The code that results from monomorphization is doing **static dispatch**, which is when the compiler knows what method you’re calling at compile time.<br>
+This is opposed to **dynamic dispatch**, which is when the compiler can’t tell at compile time which method you’re calling.<br>
+In dynamic dispatch cases, the compiler emits code that at runtime will figure out which method to call.
+<br/>
+When we use trait objects, Rust must use dynamic dispatch.
 
 
----
-# TODO:
-### Static dispatch
-
-### Dynamic dispatch 
 
 
 ---
