@@ -1,6 +1,6 @@
 # Rust Design patterns 
 
-This document focuses on the common design patterns around **Traits**,**Static** and **Dynamic** dispatch.
+This document focuses on the common design patterns around **Traits**, **Static** and **Dynamic** dispatch.
 
 ### Initial Notes: 
 > Since Rust doesn't allow inheritance.<br>
@@ -53,15 +53,16 @@ pub fn notify(item: &impl Summary) {
 
 ### Trait Bound Syntax
 
-The impl Trait syntax works for straightforward cases but is **actually syntax sugar** for a longer form known as a **trait bound**; it looks like this:
+The impl Trait syntax works for straightforward cases but is actually $${\color{orange}syntax&#8202;sugar}$$ for a longer form known as a **trait bound**; it looks like this:
 ```rust
 pub fn notify<T: Summary>(item: &T) {
     println!("Breaking news! {}", item.summarize());
 }
 ```
-This longer form is equivalent to the example in the previous section but is more verbose.
-The **impl Trait** syntax is convenient and makes for **more concise code in simple cases**.<br>
+This longer form is equivalent to the example in the previous section but is more verbose.<br>
+The $${\color{orange}impl&#8202;Trait}$$ syntax is convenient and makes for **more concise code in simple cases**.<br>
 While the fuller **trait bound syntax** can express more complexity in other cases. 
+<br/>
 
 For example, we can have two parameters that implement Summary. Doing so with the impl Trait syntax looks like this:
 ```rust,ignore
@@ -108,7 +109,7 @@ fn returns_summarizable() -> impl Summary {
 //returns_summarizable function returns some type that implements the Summary trait without naming the concrete type.
 ```
 However, you can only use impl Trait if you’re **returning a single type**.<br>
-Returning either a NewsArticle or a Tweet isn’t allowed due to restrictions around how the impl Trait syntax is implemented in the compiler.<br>
+Returning either a NewsArticle or a Tweet type isn’t allowed due to restrictions around how the impl Trait syntax is implemented in the compiler.<br>
 See : [Using Trait Objects That Allow for Values of Different Types](https://doc.rust-lang.org/book/ch17-02-trait-objects.html#using-trait-objects-that-allow-for-values-of-different-types)
 
 ### Using Trait Bounds to Conditionally Implement Methods
@@ -184,10 +185,55 @@ The code that results from monomorphization is doing **static dispatch**, which 
 This is opposed to **dynamic dispatch**, which is when the compiler can’t tell at compile time which method you’re calling.<br>
 In dynamic dispatch cases, the compiler emits code that at runtime will figure out which method to call.
 <br/>
-When we use trait objects, Rust must use dynamic dispatch.
+When we use trait objects, Rust must use dynamic dispatch.<br>
+
+See: [Great static vs Dyn dispatch comparison](https://oswalt.dev/2021/06/polymorphism-in-rust/)
+
+### Advanced Traits | [Book](https://doc.rust-lang.org/book/ch19-03-advanced-traits.html)
+
+$${\color{orange}Associated&#8202;types}$$ connect a type placeholder with a trait such that the trait method definitions can use these placeholder types in their signatures.<br>
+The implementor of a trait will specify the concrete type to be used instead of the placeholder type.<br>
+That way, we can define a trait that uses some types without needing to know exactly what those types are until the trait is implemented.
+```rust
+pub trait Iterator {
+    type Item; //associated type (placeholader type)
+
+    fn next(&mut self) -> Option<Self::Item>;
+}
+```
+Why not to use generics instead? 
+```rust
+pub trait Iterator<T> {
+    fn next(&mut self) -> Option<T>;
+}
+```
+The difference is that when using generics, as in Listing 19-13, we must annotate the types in each implementation; because we can also implement Iterator<String> for Counter or any other type.<br>
+When a trait has a generic parameter, it can be implemented for a type multiple times, changing the concrete types of the generic type parameters each time.<br/>
+
+- With associated types, we don’t need to annotate types because we can’t implement a trait on a type multiple times. <br>(there can only be one impl Iterator for Counter)
+<br/>
+
+More complex Associated type example:
+```rust
+impl<Func, Arg1, Arg2, Fut> Handler<(Arg1, Arg2)> for Func
+where
+    Func: Fn(Arg1, Arg2) -> Fut + Clone + 'static,
+    Fut: Future,
+{
+    type Output = Fut::Output;
+    type Future = Fut;
+    
+    fn call(&self, (arg1, arg2): (Arg1, Arg2)) -> Self :: Future {
+        (self)(arg1, arg2)
+    }
+
+}
+//This is saying "we are implementing the Handler trait for any function type Func that takes two arguments (Arg1, Arg2)".
+//Fut must implement the Future trait, and the associated types Output and Future are derived from this future type.
+```
 
 
-
+### HRTB - Higher rank trait bounds - (Rustonomicon)[https://doc.rust-lang.org/nomicon/hrtb.html]
 
 ---
 ### References 
