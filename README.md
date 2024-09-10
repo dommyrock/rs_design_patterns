@@ -375,6 +375,7 @@ fn main() {
 - [Trait objects - Book](https://doc.rust-lang.org/book/ch17-02-trait-objects.html#using-trait-objects-that-allow-for-values-of-different-types)
 - [Functional features](https://doc.rust-lang.org/book/ch13-00-functional-features.html)
 - ['Deref' Trait](https://doc.rust-lang.org/book/ch15-02-deref.html#treating-smart-pointers-like-regular-references-with-the-deref-trait)
+- [Special types and traits](https://doc.rust-lang.org/reference/special-types-and-traits.html)
 
 ##### Posts
 - [Polymorphism in rust - Matt Oswalt](https://oswalt.dev/2021/06/polymorphism-in-rust/)
