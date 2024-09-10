@@ -399,7 +399,7 @@ Vtable for any trait object includes a pointer for Drop fn for concrete type. (a
 - [Dyn vs Static Dispatch - Ryan Levick](https://www.youtube.com/watch?v=tM2r9HD4ivQ)
 - [Dispatch & Fat pointers - Jon Gjengset](https://www.youtube.com/watch?v=xcygqF5LVmM)
 - [Zero cost abstractions intro - Oliver Jumpertz](https://www.youtube.com/watch?v=MRXi19zQgSo)
-- 
+- [2 ways to do dynamic dispatch](https://www.youtube.com/watch?v=wU8hQvU8aKM)
 
 
 ---
