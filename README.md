@@ -360,10 +360,21 @@ fn main() {
 - If we wanted the new type to have every method the inner type has, implementing the [Deref trait](https://doc.rust-lang.org/book/ch15-02-deref.html#treating-smart-pointers-like-regular-references-with-the-deref-trait) on the Wrapper to return the inner type would be a solution.
 - If we don’t want the Wrapper type to have all the methods of the inner type—for example, to restrict the Wrapper type’s behavior—we would have to implement just the methods we do want manually.
 
+### Every VTable Includes Drop
+Vtable for any trait object includes a pointer for Drop fn for concrete type. (also includes size and alignment)<br>
+> Vtable contents:
+> - methods
+> - size
+> - alignment
+> - Drop
+  
+<br/>
 
+![image](https://github.com/user-attachments/assets/410d1812-2b30-4992-a981-542db6df0fa9)
+<br/>
+![image](https://github.com/user-attachments/assets/e1d23b0c-a71e-4678-8fda-85910682bf26)
 
 ### HRTB - Higher rank trait bounds - [Rustonomicon](https://doc.rust-lang.org/nomicon/hrtb.html)
-
 
 ---
 ### References 
@@ -376,6 +387,7 @@ fn main() {
 - [Functional features](https://doc.rust-lang.org/book/ch13-00-functional-features.html)
 - ['Deref' Trait](https://doc.rust-lang.org/book/ch15-02-deref.html#treating-smart-pointers-like-regular-references-with-the-deref-trait)
 - [Special types and traits](https://doc.rust-lang.org/reference/special-types-and-traits.html)
+- [Owned trait objects](https://google.github.io/comprehensive-rust/smart-pointers/trait-objects.html)
 
 ##### Posts
 - [Polymorphism in rust - Matt Oswalt](https://oswalt.dev/2021/06/polymorphism-in-rust/)
