@@ -43,7 +43,7 @@ impl Summary for Tweet {
 }
 ```
 
-### Traits as Parameters
+### Traits as Parameters | [Ref](https://doc.rust-lang.org/reference/types/impl-trait.html)
 This parameter accepts any type that implements the specified trait.
 ```rust
 pub fn notify(item: &impl Summary) {
@@ -51,7 +51,7 @@ pub fn notify(item: &impl Summary) {
 }
 ```
 
-### Trait Bound Syntax
+### Trait Bound Syntax | [Ref](https://doc.rust-lang.org/reference/trait-bounds.html)
 
 The impl Trait syntax works for straightforward cases but is actually $${\color{orange}syntax&#8202;sugar}$$ for a longer form known as a **trait bound**; it looks like this:
 ```rust
@@ -154,7 +154,7 @@ let s = 3.to_string();
 Blanket implementations appear in the documentation for the trait in the “Implementors” section.
 
 
-### Fn Traits | [Book](https://doc.rust-lang.org/book/ch13-01-closures.html#moving-captured-values-out-of-closures-and-the-fn-traits)
+### Fn Traits | [Book](https://doc.rust-lang.org/book/ch13-01-closures.html#moving-captured-values-out-of-closures-and-the-fn-traits) , [Ref](https://doc.rust-lang.org/reference/trait-bounds.html)
 ```rust
 //FnOnce - All closures implement at least this trait
 //A closure that moves captured values out of its body will only implement FnOnce and none of the other Fn traits,
@@ -176,7 +176,7 @@ impl<T> Option<T> {
 Using $${\color{orange}FnOnce}$$ in the trait bound expresses the constraint that unwrap_or_else is only going to call f at most one time.
 Because all closures implement $${\color{orange}FnOnce}$$, unwrap_or_else accepts all three kinds of closures and is as flexible as it can be.
 
-### Trait objects - Dynamic & Static dispatch | [Book](https://doc.rust-lang.org/book/ch17-02-trait-objects.html#using-trait-objects-that-allow-for-values-of-different-types)
+### Trait objects - Dynamic & Static dispatch | [Book](https://doc.rust-lang.org/book/ch17-02-trait-objects.html#using-trait-objects-that-allow-for-values-of-different-types) , [Ref](https://doc.rust-lang.org/reference/types/trait-object.html)
 <br/>
 
 $${\color{orange}Monomorphization}$$ process performed by the compiler when we use trait bounds on generics:<br>
