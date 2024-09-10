@@ -1,6 +1,6 @@
 # Rust - Trait Design patterns 
 
-This document focuses on the common design patterns around **Traits**, **Static** and **Dynamic** dispatch.
+This document focuses on the common design patterns around **[Traits](https://doc.rust-lang.org/reference/items/traits.html#object-safety)**, **Static** and **Dynamic** dispatch ([Trait objects](https://doc.rust-lang.org/reference/types/trait-object.html)).
 
 ### Initial Notes: 
 > Since Rust doesn't allow inheritance.<br>
@@ -368,8 +368,11 @@ fn main() {
 ---
 ### References 
 ##### Book
+- [Trait and lifetime bounds](https://doc.rust-lang.org/reference/trait-bounds.html)
+- [Impl trait](https://doc.rust-lang.org/reference/types/impl-trait.html)
 - [Advanced Traits](https://doc.rust-lang.org/book/ch19-03-advanced-traits.html)
-- [Trait objects](https://doc.rust-lang.org/book/ch17-02-trait-objects.html#using-trait-objects-that-allow-for-values-of-different-types)
+- [Trait object reference](https://doc.rust-lang.org/reference/types/trait-object.html)
+- [Trait objects - Book](https://doc.rust-lang.org/book/ch17-02-trait-objects.html#using-trait-objects-that-allow-for-values-of-different-types)
 - [Functional features](https://doc.rust-lang.org/book/ch13-00-functional-features.html)
 - ['Deref' Trait](https://doc.rust-lang.org/book/ch15-02-deref.html#treating-smart-pointers-like-regular-references-with-the-deref-trait)
 
