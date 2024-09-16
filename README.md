@@ -370,9 +370,38 @@ Vtable for any trait object includes a pointer for Drop fn for concrete type. (a
   
 <br/>
 
-![image](https://github.com/user-attachments/assets/410d1812-2b30-4992-a981-542db6df0fa9)
+```rust
+trait Speak {
+    fn speak(&self);        
+}            
+
+struct Animal {data i32}    
+impl Speak for Animal {    
+    fn speak(&self) {/**/}    
+}
+
+let a = Animal {data:42};
+a.speak();
+
+let da = &a as &dyn Speak;
+da.speak();
+                                    ┌────────────────────┐
+                                    │ drop_in_place*     │
+                                    ├────────────────────┤
+                                    │ size               │
+┌──────────────┐                    ├────────────────────┤
+│     42       ◄──┐                 │ alignment          │
+└──────────────┘  │                 └────────────────────┤
+      data        │          ┌──────► speak*             │
+                  │          │      └────────────────────┘
+                  │          │                            
+                  │          │                            
+  ┌───────────────┼─────┬────┼────────────────┐           
+  │      <value>        │        <vptr>       │           
+  └─────────────────────┴─────────────────────┘             
+```
+
 <br/>
-![image](https://github.com/user-attachments/assets/e1d23b0c-a71e-4678-8fda-85910682bf26)
 
 ### HRTB - Higher rank trait bounds - [Rustonomicon](https://doc.rust-lang.org/nomicon/hrtb.html)
 
