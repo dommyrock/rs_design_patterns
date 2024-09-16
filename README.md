@@ -207,7 +207,7 @@ pub trait Iterator<T> {
     fn next(&mut self) -> Option<T>;
 }
 ```
-The difference is that when using generics, as in Listing 19-13, we must annotate the types in each implementation; because we can also implement Iterator<String> for Counter or any other type.<br>
+The difference is that when using generics, we must annotate the types in each implementation; because we can also implement Iterator<String> for Counter or any other type.<br>
 When a trait has a generic parameter, it can be implemented for a type multiple times, changing the concrete types of the generic type parameters each time.<br/>
 
 - With associated types, we don’t need to annotate types because we can’t implement a trait on a type multiple times. <br>(there can only be one impl Iterator for Counter)
