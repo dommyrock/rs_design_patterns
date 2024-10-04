@@ -429,6 +429,7 @@ da.speak();
 - [Dispatch & Fat pointers - Jon Gjengset](https://www.youtube.com/watch?v=xcygqF5LVmM)
 - [Zero cost abstractions intro - Oliver Jumpertz](https://www.youtube.com/watch?v=MRXi19zQgSo)
 - [2 ways to do dynamic dispatch](https://www.youtube.com/watch?v=wU8hQvU8aKM)
+- [Typestate pattern -Nazmul Idris](https://www.youtube.com/watch?v=FTSb0dyDOCA)
 
 
 ---
