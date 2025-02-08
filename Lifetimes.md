@@ -1,6 +1,32 @@
 # Lifetimes are kinda like types
 
 ```rust
+fn main(){
+    let my_str :String = "ananas is blue".to_string();
+    let mut vec:Vec<&str> = Vec::new();
+    vec.push(&my_str);
+    drop(my_str);
+    println!("{:?}",vec); //Vec still contains reference to non existent object (use after free c++..)
+}
+```
+
+Error we get for this in Rust is ...
+
+```txt
+>> cannot move out of `my_str` because it is borrowed
+         let mut vec = Vec::<&str>::new();
+9  |     vec.push(&my_str);
+   |              ------- borrow of `my_str` occurs here
+10 |     //push_vec(&mut vec, a);
+11 |     drop(my_str);
+   |          ^^^^^^ move out of `my_str` occurs here
+12 |     println!("{:?}",vec);
+   |                     --- borrow later used here
+```
+
+## Usingn our own `my_push` fn instead
+
+```rust
 fn my_push(vector: &mut Vec<&String>, element: &String) {
    vector.push(element);
 }
@@ -12,6 +38,83 @@ fn main() {
    println! ("[:?}", my_vec);
 }
 ```
+
+We Get compiler error complaining about lifetimes of our `fn references`.</br>
+Even if we cleared our main we would still get the compiler erorr.
+
+```rust
+fn push_vec(vec: &mut Vec<&str>, item: &str){
+    vec.push(item);
+}
+
+fn main(){
+}
+```
+
+```txt
+>> `lifetime may not live long enough`
+fn push_vec(vec: &mut Vec<&str>, item: &str){
+  |                       -            - let's call the lifetime of this reference `'1`
+  |                       |
+  |                       let's call the lifetime of this reference `'2`
+3 |     vec.push(item);
+  |     ^^^^^^^^^^^^^^ argument requires that `'1` must outlive `'2`
+```
+
+- Meaning that compiler mostly looks at the `fn` signatures to determine potential lifetime issues.
+
+</br>
+
+If we never pushed our reference to the Vec, than error would be gone.
+
+- Even if I pass a reference `my_str` to `my_push`, but the function doesn't actually use it, the compiler is smart enough to see that and won't give me an error when it's dropped later.
+
+```rust
+fn push_vec(vec: &mut Vec<&str>, item: &str){
+    //vec.push(item); uncommenting this will throw 'lifetime' error again
+}
+fn main(){
+    let my_str :String = "ananas is blue".to_string();
+    let mut vec = Vec::<&str>::new();
+    push_vec(&mut vec, &my_str);
+    drop(my_str);
+    println!("{:?}",vec);
+}
+```
+
+</br>
+
+All this is saying that Rust doesn't see the `Vex<&str>` items and item:`&str` as the same types...</br>
+Hinting to use that **lifetimes are actually the part of the TYPE SYSTEM of Rust**. </br>
+
+If we signal to Rust compiler that these types are actually the same type by replacing `&str` with generic `<T>`.</br>
+
+The Compiler is happy! No more errors.
+
+```rust
+fn push_vec<T>(vec: &mut Vec<T>, item: T){
+    vec.push(item);
+}
+
+fn main(){
+    let my_str :String = "ananas is blue".to_string();
+    let mut vec = Vec::<&str>::new();
+    push_vec(&mut vec, &my_str);
+    //drop(my_str);
+    println!("{:?}",vec);
+}
+```
+
+**Hint** if you checked `HIR code` outputed by the compiler at this point you would see this.</br>
+Showing that compiler did indeed only elide (assume) lifetime of `Vec` itself. It noticed that inner Vec type and `element` param are of the same Type `<T>`.
+
+> Compiler emmited HIR code
+
+```txt
+fn push_vec<T, '_>(vec: &'_ mut Vec<T>, item: T) { vec.push(item); }
+```
+
+Onto more experiments...
 
 ## Manualy typing out the lifetimes
 
@@ -31,11 +134,13 @@ fn my_push<'a,'c>(vector: &'c mut Vec<&'a String>, element: & 'a String) {
 }
 ```
 
+### Final Verion
+
 We don't have any requirements on lifetime 'c , so we can just delete it an let compiler emit this for us.</br>
 We only needed to name one lifetime `'a` param.
 
 ```rust
-fn my_push<'a>(vector: & mut Vec<&'a String>, element: & 'a String) {
+fn my_push<'a>(vector: & mut Vec<&'a str>, element: &'a str) {
    vector.push(element);
 }
 ```
@@ -52,14 +157,14 @@ fn my_push<'a>(vector: &'a mut Vec<&'a String>, element: & 'a String) {
 println!("{:?}",my_vec);
 ```
 
-- This will thow : `cannot borrow 'my_vec' as immutable bexause it is also borrowed as mutable`
+- This will thow : `cannot borrow 'my_vec' as immutable because it is also borrowed as mutable`
 - Because. This breaks NO MUTABLE ALIASING RULE.
 
 </br>
 
 ---
 
-### Lowering Rsust code to HIR / MIR
+### Lowering Rust code to HIR / MIR
 
 Lowering the code to MIR, HIR , HIR,Typed
 
@@ -127,3 +232,10 @@ error: unknown emission type: `hir` - expected one of: `llvm-bc`, `thin-link-bit
 
 [A First look at the lifetimes - Jack OConnor](https://www.youtube.com/watch?v=-gkvOoxgp8E) (Great intro to lifetimes)
 
+[Rust book](https://doc.rust-lang.org/book/ch10-03-lifetime-syntax.html)
+
+[Rustonomicon - Lifetimes](https://doc.rust-lang.org/nomicon/lifetimes.html)
+
+[MIT - lifetimes in structs, impl blocks, 'static](https://web.mit.edu/rust-lang_v1.25/arch/amd64_ubuntu1404/share/doc/rust/html/book/first-edition/lifetimes.html)
+
+[Rust by example](https://doc.rust-lang.org/rust-by-example/scope/lifetime.html)

@@ -170,7 +170,7 @@ assert_eq! (char_array[0], 'b');
 - `RefCell<char>` (escape hatch into borrowing and aliasing rules)
 - unsafe code
 
-- split_at_mut
+split_at_mut() example
 
 ```rust
 let mut char_array: [char; 2] = ['a', 'b'];
