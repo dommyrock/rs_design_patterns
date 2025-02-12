@@ -644,4 +644,124 @@ Instead, you store it once (or rely on the compiler’s type information) and on
 </br>
 A combination of my own examples translated into MD format and synthetic reasoning on top of them.
 
+---
+
+# Comparing **Trait objects** and static dispatch
+
+Let's compare three common ways to work with callable things in Rust:
+
+1. **`&dyn Fn`**  
+2. **`Box<dyn Fn>`**  
+3. **`impl Fn()`**
+
+They might all allow you to “call” a function or closure, but they differ in ownership, dispatch mechanism, and memory layout. Let’s break down each one with examples and usage guidance.
+
+---
+
+## 1. `&dyn Fn`
+
+### **What It Is**  
+- A **trait object reference** (a *borrowed fat pointer*) that points to some value implementing the `Fn` trait.  
+- It carries two pointers internally: one to the data (the closure or function) and one to its vtable for dynamic dispatch.  
+- **Size on 64-bit systems:** 16 bytes.
+
+### **When to Use It**  
+- When you want to accept or pass a **borrowed callable** without taking ownership.
+- Ideal for callback parameters or when the caller owns the data.
+- Use dynamic dispatch when you don’t know the concrete type at compile time.
+
+### **Example**
+
+```rust
+fn call_it(f: &dyn Fn(i32) -> i32, x: i32) -> i32 {
+    // Call the function via dynamic dispatch.
+    f(x)
+}
+
+fn main() {
+    let closure = |x| x + 1;
+    let result = call_it(&closure, 5);
+    println!("Result using &dyn Fn: {}", result); // prints 6
+}
+```
+
+---
+
+## 2. `Box<dyn Fn>`
+
+### **What It Is**  
+- A **boxed trait object**: it owns the callable value on the heap.
+- The **Box itself is a thin pointer** (8 bytes on 64-bit systems) pointing to a heap allocation that contains the closure *and* its metadata (including the vtable pointer).
+- The boxing moves the “fat pointer” data to the heap so that on the stack you only carry an 8‑byte pointer.
+
+### **When to Use It**  
+- When you want to **own a callable** and possibly store it in a struct or return it from a function.
+- Useful when the concrete type is unknown (or too complex) and you want to hide it behind a trait.
+- Often used in situations where you need **dynamic dispatch** and the callable’s size isn’t known at compile time.
+
+### **Example**
+
+```rust
+fn create_adder() -> Box<dyn Fn(i32) -> i32> {
+    // Box the closure so that the caller receives an owned, heap-allocated trait object.
+    Box::new(|x| x + 1)
+}
+
+fn main() {
+    let adder = create_adder();
+    println!("Result using Box<dyn Fn>: {}", adder(5)); // prints 6
+}
+```
+
+---
+
+## 3. `impl Fn()`
+
+### **What It Is**  
+- An **opaque type** that implements the `Fn` trait.
+- **This is not a trait object**; instead, it’s a concrete (but hidden) type.
+- The caller doesn’t know (or need to know) the exact type, but the **function is monomorphized** (static dispatch).
+- The actual size of the closure depends on what it captures.
+- **No dynamic dispatch overhead** because the concrete type is determined at compile time.
+
+### **When to Use It**  
+- When you want to **return a closure** (or function) from a function while hiding its concrete type.
+- Use it when you want the performance benefits of **static dispatch**.
+- Great for library APIs that want to hide implementation details without the cost of dynamic dispatch.
+
+### **Example**
+
+```rust
+// This function returns a closure that adds 1.
+// The caller does not know the concrete type, only that it implements Fn(i32) -> i32.
+fn create_adder_impl() -> impl Fn(i32) -> i32 {
+    |x| x + 1
+}
+
+fn main() {
+    let adder = create_adder_impl();
+    println!("Result using impl Fn: {}", adder(5)); // prints 6
+}
+```
+
+---
+
+## Summary Comparison Table
+
+| Signature                | What It Is                                | Memory Layout         | Dispatch Type     | When to Use It                                                     |
+|--------------------------|-------------------------------------------|-----------------------|-------------------|--------------------------------------------------------------------|
+| **`&dyn Fn(i32) -> i32`** | Borrowed trait object (fat pointer)       | 16 bytes (on 64-bit)  | Dynamic dispatch  | When you have a borrowed callable and do not want to own it.       |
+| **`Box<dyn Fn(i32) -> i32>`** | Heap‑allocated trait object (owned)         | 8 bytes (stack pointer) + heap data | Dynamic dispatch  | When you want to own a callable (e.g., to store it or return it from a function) and hide its concrete type. |
+| **`impl Fn(i32) -> i32`**   | Opaque, concrete type implementing `Fn`   | Depends on captured data (could be zero-sized) | Static dispatch   | When returning a callable without exposing its concrete type and when you want compile‑time dispatch for performance.    |
+
+---
+
+## Summary
+
+- **`&dyn Fn`** is ideal for **borrowing** a callable; you pay the cost of a fat pointer (16 bytes) and dynamic dispatch on every call.  
+- **`Box<dyn Fn>`** is great when you need **ownership** and flexibility (like storing or returning callables) while keeping your stack usage minimal (just an 8‑byte pointer).  
+- **`impl Fn`** hides the concrete type but allows **static dispatch**, which can lead to better performance and potentially zero runtime overhead if the closure is small or captures nothing.
+
+</br>
+
 by `Dominik Polzer`
