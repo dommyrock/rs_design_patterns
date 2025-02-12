@@ -449,4 +449,6 @@ Follow jack, he's Great!
 
 - [Slides - AFirehoseOfRust - Jack](https://jacko.io/firehose_of_rust)
 
+</br>
+
 By `Dominik Polzer`

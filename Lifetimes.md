@@ -239,3 +239,7 @@ error: unknown emission type: `hir` - expected one of: `llvm-bc`, `thin-link-bit
 [MIT - lifetimes in structs, impl blocks, 'static](https://web.mit.edu/rust-lang_v1.25/arch/amd64_ubuntu1404/share/doc/rust/html/book/first-edition/lifetimes.html)
 
 [Rust by example](https://doc.rust-lang.org/rust-by-example/scope/lifetime.html)
+
+</br>
+
+by `Dominik Polzer`

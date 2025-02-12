@@ -125,3 +125,7 @@ Higher-ranked lifetimes may also be specified just before the trait: the only di
 - [HRTB Intro - Video](https://www.youtube.com/watch?v=6fwDwJodJrg)
 - [Rustonomicon](https://doc.rust-lang.org/nomicon/hrtb.html)
 - [Hrtb Rust Reference](https://doc.rust-lang.org/reference/trait-bounds.html#higher-ranked-trait-bounds)
+
+</br>
+
+by `Dominik Polzer`
