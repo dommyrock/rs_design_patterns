@@ -41,9 +41,9 @@ let closure = |x: i32| x + 1;
 let trait_obj_ref: &dyn Fn(i32) -> i32 = &closure;
 println!("Size of &dyn Fn: {}", mem::size_of_val(&trait_obj_ref)); // 16 bytes
 
-// 2. A boxed trait object (thin pointer on the stack)
+// 2. A boxed trait object 
 let boxed_trait: Box<dyn Fn(i32) -> i32> = Box::new(closure);
-println!("Size of Box<dyn Fn>: {}", mem::size_of_val(&boxed_trait)); // 8 bytes
+println!("Size of Box<dyn Fn>: {}", mem::size_of_val(&boxed_trait)); // 16 bytes
 
 //---- Trait objects ----
 
@@ -160,9 +160,7 @@ A reference to a trait object (`&dyn TNotZero`) is a **fat pointer** consisting 
 
 Since each pointer is **8 bytes** on a 64-bit system, the total size of `&dyn TNotZero` is:
 
-\[
-8 \text{ (data pointer)} + 8 \text{ (vtable pointer)} = 16 \text{ bytes}
-\]
+8 **(data pointer)**  + 8  **(vtable pointer)** = 16  bytes
 
 ---
 
@@ -181,9 +179,9 @@ Trait objects enable **dynamic dispatch**, meaning method calls are resolved at 
 | `&i32`             | 8 bytes               | Single pointer |
 | `&[i32]` (slice)   | 16 bytes              | Fat pointer: (ptr + length) |
 | `&dyn Trait`       | 16 bytes              | Fat pointer: (ptr + vtable) |
-| `Box<dyn Trait>`   | 8 bytes               | Single pointer (heap-allocated, but still stores fat pointer) |
-| `Rc<dyn Trait>`    | 8 bytes               | Same as `Box<dyn Trait>` |
-| `Arc<dyn Trait>`   | 8 bytes               | Same as `Box<dyn Trait>` |
+| `Box<dyn Trait>`   | 16 bytes               | Single pointer (heap-allocated, but still stores fat pointer) |
+| `Rc<dyn Trait>`    | 16 bytes               | Same as `Box<dyn Trait>` |
+| `Arc<dyn Trait>`   | 16 bytes               | Same as `Box<dyn Trait>` |
 
 ---
 
@@ -243,36 +241,28 @@ Unlike function pointers, **closures in Rust can capture their environment**. Th
 ---
 
 ### **C. Boxed Function Trait Objects (`Box<dyn Fn>` etc.)**
-When we **box** a function trait object, we store it on the heap, which changes its size.
+
+For unsized types (like trait objects), the Box holds a fat pointer.
 
 #### **1. `Box<dyn Fn(T) -> U>`**
-- **Size: 8 bytes** (single pointer).
-- **Why?**
-  - A `Box<T>` just stores a **single pointer** to a heap-allocated `T`.
 - Example:
   ```rust
   let s = std::mem::size_of::<Box<dyn Fn(i32) -> i32>>();
-  println!("Box<dyn Fn>: {}", s); // Output: 8
+  println!("Box<dyn Fn>: {}", s); // Output: 16
   ```
 
 #### **2. `Box<dyn FnMut(T) -> U>`**
-- **Size: 8 bytes** (same as `Box<dyn Fn>`).
-- **Why?**
-  - The indirection to the heap remains the same.
 - Example:
   ```rust
   let s = std::mem::size_of::<Box<dyn FnMut(i32) -> i32>>();
-  println!("Box<dyn FnMut>: {}", s); // Output: 8
+  println!("Box<dyn FnMut>: {}", s); // Output: 16
   ```
 
 #### **3. `Box<dyn FnOnce(T) -> U>`**
-- **Size: 8 bytes** (same as `Box<dyn Fn>`).
-- **Why?**
-  - Again, a `Box` just stores a heap pointer.
 - Example:
   ```rust
   let s = std::mem::size_of::<Box<dyn FnOnce(i32) -> i32>>();
-  println!("Box<dyn FnOnce>: {}", s); // Output: 8
+  println!("Box<dyn FnOnce>: {}", s); // Output: 16
   ```
 
 ---
@@ -282,9 +272,12 @@ If a closure captures **variables from its environment**, its size depends on th
 
 - Example:
   ```rust
-  let x = 42;
-  let closure = || println!("{}", x);
-  println!("Size of closure: {}", std::mem::size_of_val(&closure));
+      let x: i32 = 42;
+    let closure = || println!("{}", x);
+    println!("Size of closure: {}", std::mem::size_of_val(&closure));// 8 bytes
+    let (x,y,z)= (42,43,44);
+    let closure = || println!("{} {} {}", x, y, z);
+    println!("Size of closure: {}", std::mem::size_of_val(&closure));// 24 bytes
   ```
   - If `x` is an `i32`, then the closure will **store `x` inside itself**, increasing its size.
   - For instance, if the closure captures an `i32`, it might be **4 bytes (i32) + alignment padding**.
@@ -298,11 +291,11 @@ If a closure captures **variables from its environment**, its size depends on th
 | `&dyn Fn(i32) -> i32` | 16 bytes              | Fat pointer (closure env + vtable). |
 | `&dyn FnMut(i32) -> i32` | 16 bytes          | Same as `&dyn Fn` (fat pointer). |
 | `&dyn FnOnce(i32) -> i32` | 16 bytes         | Same as `&dyn Fn` (fat pointer). |
-| `Box<dyn Fn(i32) -> i32>` | 8 bytes          | Single pointer to heap. |
-| `Box<dyn FnMut(i32) -> i32>` | 8 bytes       | Same as `Box<dyn Fn>`. |
-| `Box<dyn FnOnce(i32) -> i32>` | 8 bytes      | Same as `Box<dyn Fn>`. |
+| `Box<dyn Fn(i32) -> i32>` | 16 bytes          | Single pointer to heap. |
+| `Box<dyn FnMut(i32) -> i32>` | 16 bytes       | Same as `Box<dyn Fn>`. |
+| `Box<dyn FnOnce(i32) -> i32>` | 16 bytes      | Same as `Box<dyn Fn>`. |
 | **Closure capturing nothing** | 0 bytes     | Empty closures have zero size. |
-| **Closure capturing an `i32`** | 4 bytes     | Stores captured variable inline. |
+| **Closure capturing an `i32`** | 8 bytes     | Stores captured variable inline. |
 
 ---
 
@@ -447,7 +440,6 @@ When you want to store an immutable closure on the heap.
 ```rust
 fn main() {
     let closure = |x: i32| x * 2;
-    // Box the closure so that only an 8-byte pointer is stored on the stack.
     let func: Box<dyn Fn(i32) -> i32> = Box::new(closure);
     println!("Box<dyn Fn> result: {}", func(5)); // prints 10
 }
@@ -535,9 +527,9 @@ fn main() {
 | **`&dyn Fn(i32) -> i32`**         | 16 bytes      | Trait object for an immutable closure; use when you need dynamic dispatch for read‑only operations.                                                                          |
 | **`&mut dyn FnMut(i32) -> i32`**    | 16 bytes      | Trait object for a mutable closure; use when the closure modifies its environment.                                                                                         |
 | **`&dyn FnOnce(&str)`**           | 16 bytes*     | Trait object for a FnOnce closure (not normally callable via trait object because FnOnce isn’t object safe). Demonstration only.                                              |
-| **`Box<dyn Fn(i32) -> i32>`**      | 8 bytes       | Heap‑allocated immutable closure; useful for returning closures or when size is unknown at compile time.                                                                     |
-| **`Box<dyn FnMut(i32) -> i32>`**   | 8 bytes       | Heap‑allocated mutable closure; similar to Box<dyn Fn> but allows internal mutation.                                                                                        |
-| **`Box<dyn FnOnce(i32) -> i32>`**  | 8 bytes*      | Heap‑allocated FnOnce closure; rarely used because FnOnce is not object safe. (*Trait objects for FnOnce are generally for demonstration only.)                              |
+| **`Box<dyn Fn(i32) -> i32>`**      | 16 bytes       | Heap‑allocated immutable closure; useful for returning closures or when size is unknown at compile time.                                                                     |
+| **`Box<dyn FnMut(i32) -> i32>`**   | 16 bytes       | Heap‑allocated mutable closure; similar to Box<dyn Fn> but allows internal mutation.                                                                                        |
+| **`Box<dyn FnOnce(i32) -> i32>`**  | 16 bytes*      | Heap‑allocated FnOnce closure; rarely used because FnOnce is not object safe. (*Trait objects for FnOnce are generally for demonstration only.)                              |
 | **Empty capturing closure**       | ~0 bytes      | Closure that captures nothing—minimal overhead and sometimes convertible to a function pointer.                                                                           |
 | **Closure capturing an `i32`**    | ≥4 bytes      | Closure that captures an `i32` from the environment; size includes the captured value plus any alignment/padding.                                                             |
 
@@ -584,32 +576,7 @@ So a reference like `&dyn Fn(i32) -> i32` is 16 bytes in total (8 bytes for the 
   When you have a reference (or a function parameter) of type `&dyn Fn(i32) -> i32`, it’s a fat pointer (16 bytes) because it directly contains both the data pointer and the vtable pointer.
 
 - **`Box<dyn Trait>` (Owned Pointer):**  
-  A `Box<T>` is a smart pointer that owns its data on the heap. Even if `T` is an unsized type (like `dyn Fn(i32) -> i32`), the **Box itself is represented as a single, thin pointer (8 bytes on a 64‑bit system)**.  
-  Here’s why:
-  - The **heap allocation** for a boxed trait object stores the actual data (the closure or function) *and* the necessary metadata (i.e. the vtable pointer) along with it.
-  - The **Box** that you hold on the stack only needs to keep a single pointer (8 bytes) that points to the heap allocation.
-  - When you *dereference* the Box (for example, when calling a method on the trait object), Rust “reconstructs” the fat pointer by pairing the stored pointer with the vtable pointer—which it knows based on the type of the trait object.
-
-In short, by boxing the trait object, you are moving the vtable pointer from your stack frame (where every fat pointer would require 16 bytes) into the heap allocation where it’s stored once. Your Box itself is just a thin pointer (8 bytes).
-
-### Code Example: Comparing &dyn Fn and Box<dyn Fn>
-
-```rust
-use std::mem;
-fn main() {
-    // 1. A trait object reference (fat pointer)
-    let closure = |x: i32| x + 1;
-    let trait_obj_ref: &dyn Fn(i32) -> i32 = &closure;
-    println!("Size of &dyn Fn: {}", mem::size_of_val(&trait_obj_ref)); // 16 bytes
-
-    // 2. A boxed trait object (thin pointer on the stack)
-    let boxed_trait: Box<dyn Fn(i32) -> i32> = Box::new(closure);
-    println!("Size of Box<dyn Fn>: {}", mem::size_of_val(&boxed_trait)); // 8 bytes
-
-    // When you call through the Box, Rust “reconstructs” the fat pointer behind the scenes.
-    println!("Box<dyn Fn> call: {}", boxed_trait(5)); // prints 6
-}
-```
+  A `Box<T>` is a smart pointer that owns its data on the heap. 
 
 ---
 
@@ -648,118 +615,14 @@ A combination of my own examples translated into MD format and synthetic reasoni
 
 # Comparing **Trait objects** and static dispatch
 
-Let's compare three common ways to work with callable things in Rust:
-
 1. **`&dyn Fn`**  
 2. **`Box<dyn Fn>`**  
 3. **`impl Fn()`**
 
-They might all allow you to “call” a function or closure, but they differ in ownership, dispatch mechanism, and memory layout. Let’s break down each one with examples and usage guidance.
-
----
-
-## 1. `&dyn Fn`
-
-### **What It Is**  
-- A **trait object reference** (a *borrowed fat pointer*) that points to some value implementing the `Fn` trait.  
-- It carries two pointers internally: one to the data (the closure or function) and one to its vtable for dynamic dispatch.  
-- **Size on 64-bit systems:** 16 bytes.
-
-### **When to Use It**  
-- When you want to accept or pass a **borrowed callable** without taking ownership.
-- Ideal for callback parameters or when the caller owns the data.
-- Use dynamic dispatch when you don’t know the concrete type at compile time.
-
-### **Example**
-
-```rust
-fn call_it(f: &dyn Fn(i32) -> i32, x: i32) -> i32 {
-    // Call the function via dynamic dispatch.
-    f(x)
-}
-
-fn main() {
-    let closure = |x| x + 1;
-    let result = call_it(&closure, 5);
-    println!("Result using &dyn Fn: {}", result); // prints 6
-}
-```
-
----
-
-## 2. `Box<dyn Fn>`
-
-### **What It Is**  
-- A **boxed trait object**: it owns the callable value on the heap.
-- The **Box itself is a thin pointer** (8 bytes on 64-bit systems) pointing to a heap allocation that contains the closure *and* its metadata (including the vtable pointer).
-- The boxing moves the “fat pointer” data to the heap so that on the stack you only carry an 8‑byte pointer.
-
-### **When to Use It**  
-- When you want to **own a callable** and possibly store it in a struct or return it from a function.
-- Useful when the concrete type is unknown (or too complex) and you want to hide it behind a trait.
-- Often used in situations where you need **dynamic dispatch** and the callable’s size isn’t known at compile time.
-
-### **Example**
-
-```rust
-fn create_adder() -> Box<dyn Fn(i32) -> i32> {
-    // Box the closure so that the caller receives an owned, heap-allocated trait object.
-    Box::new(|x| x + 1)
-}
-
-fn main() {
-    let adder = create_adder();
-    println!("Result using Box<dyn Fn>: {}", adder(5)); // prints 6
-}
-```
-
----
-
-## 3. `impl Fn()`
-
-### **What It Is**  
-- An **opaque type** that implements the `Fn` trait.
-- **This is not a trait object**; instead, it’s a concrete (but hidden) type.
-- The caller doesn’t know (or need to know) the exact type, but the **function is monomorphized** (static dispatch).
-- The actual size of the closure depends on what it captures.
-- **No dynamic dispatch overhead** because the concrete type is determined at compile time.
-
-### **When to Use It**  
-- When you want to **return a closure** (or function) from a function while hiding its concrete type.
-- Use it when you want the performance benefits of **static dispatch**.
-- Great for library APIs that want to hide implementation details without the cost of dynamic dispatch.
-
-### **Example**
-
-```rust
-// This function returns a closure that adds 1.
-// The caller does not know the concrete type, only that it implements Fn(i32) -> i32.
-fn create_adder_impl() -> impl Fn(i32) -> i32 {
-    |x| x + 1
-}
-
-fn main() {
-    let adder = create_adder_impl();
-    println!("Result using impl Fn: {}", adder(5)); // prints 6
-}
-```
-
----
-
-## Summary Comparison Table
-
-| Signature                | What It Is                                | Memory Layout         | Dispatch Type     | When to Use It                                                     |
-|--------------------------|-------------------------------------------|-----------------------|-------------------|--------------------------------------------------------------------|
-| **`&dyn Fn(i32) -> i32`** | Borrowed trait object (fat pointer)       | 16 bytes (on 64-bit)  | Dynamic dispatch  | When you have a borrowed callable and do not want to own it.       |
-| **`Box<dyn Fn(i32) -> i32>`** | Heap‑allocated trait object (owned)         | 8 bytes (stack pointer) + heap data | Dynamic dispatch  | When you want to own a callable (e.g., to store it or return it from a function) and hide its concrete type. |
-| **`impl Fn(i32) -> i32`**   | Opaque, concrete type implementing `Fn`   | Depends on captured data (could be zero-sized) | Static dispatch   | When returning a callable without exposing its concrete type and when you want compile‑time dispatch for performance.    |
-
----
-
 ## Summary
 
 - **`&dyn Fn`** is ideal for **borrowing** a callable; you pay the cost of a fat pointer (16 bytes) and dynamic dispatch on every call.  
-- **`Box<dyn Fn>`** is great when you need **ownership** and flexibility (like storing or returning callables) while keeping your stack usage minimal (just an 8‑byte pointer).  
+- **`Box<dyn Fn>`** is great when you need **ownership** and flexibility (like storing or returning callables) while keeping your stack usage minimal.
 - **`impl Fn`** hides the concrete type but allows **static dispatch**, which can lead to better performance and potentially zero runtime overhead if the closure is small or captures nothing.
 
 </br>
